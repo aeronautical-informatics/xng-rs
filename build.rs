@@ -22,7 +22,6 @@ fn main() {
         .header("wrapper.h")
         .use_core()
         .ctypes_prefix("cty")
-        .clang_arg("-I../include")
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
