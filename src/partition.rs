@@ -6,6 +6,7 @@ use core::mem::MaybeUninit;
 
 use crate::{raw_bindings, XngError};
 
+/// One partitions id type
 pub type PartitionId = raw_bindings::xPartitionId_t;
 
 /// Get the current partitions ID

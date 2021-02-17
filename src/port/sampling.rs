@@ -1,19 +1,16 @@
 use core::{ffi::c_void, mem::MaybeUninit};
 
 use super::{validity_to_bool, PortDirection};
-use crate::{raw_bindings, XngError};
+use crate::{raw_bindings, types::Time, XngError};
 
-// TODO check if the port name is nullterminated
-
+/// The type of a sampling ports id
 pub type SamplingPortId = raw_bindings::xSamplingPortId_t;
-pub type Time = raw_bindings::xTime_t;
 
 /// Keeps the last (if any) sent value
 pub struct SamplingReceiver<const N: usize> {
     port_id: SamplingPortId,
 }
 
-// TODO Pin port_buffer, likely it is necessary
 impl<const N: usize> SamplingReceiver<N> {
     /// Creates a communication port operating in sampling mode
     ///
@@ -40,9 +37,10 @@ impl<const N: usize> SamplingReceiver<N> {
         Ok(Self { port_id })
     }
 
-    /// read a message
+    /// Receives a message
     ///
-    /// Returns Ok(Some(read_bytes)) on success
+    /// Returns `Ok(Some(read_bytes))` if a valid message was available, `Ok(None)` if no message
+    /// was available and `Err(XngError)` if an error occure
     pub fn recv(&self, buf: &mut [u8; N]) -> Result<Option<usize>, XngError> {
         let mut bytes_read = MaybeUninit::uninit();
         let mut validity = MaybeUninit::uninit();
@@ -66,6 +64,7 @@ impl<const N: usize> SamplingReceiver<N> {
     }
 
     /// Get the id of this sampling port
+    // TODO should this really be exposed?
     pub fn id(&self) -> SamplingPortId {
         self.port_id
     }
@@ -76,12 +75,11 @@ impl<const N: usize> SamplingReceiver<N> {
     }
 }
 
-/// Keeps the last (if any) sent value
+/// Allows to store one message in the port
 pub struct SamplingSender<const N: usize> {
     port_id: raw_bindings::xSamplingPortId_t,
 }
 
-// TODO Pin port_buffer, likely it is necessary
 impl<const N: usize> SamplingSender<N> {
     /// Creates a communication port operating in sampling mode
     ///
@@ -108,12 +106,15 @@ impl<const N: usize> SamplingSender<N> {
         Ok(Self { port_id })
     }
 
-    /// read a message
+    /// Send a message
     ///
-    /// Returns Ok(read_bytes) on success
+    /// Returns `Ok(())` on success. `buf` must be smaller or equal in size to `N`.
     pub fn send(&self, buf: &[u8]) -> Result<(), XngError> {
         if buf.len() > N {
-            return Err(XngError::BufTooBig(buf.len()));
+            return Err(XngError::BufTooBig {
+                buf_size: buf.len(),
+                max_allowed: N,
+            });
         }
 
         let return_code = unsafe {
@@ -140,13 +141,16 @@ impl<const N: usize> SamplingSender<N> {
 /// The current status of a Sampling Port
 #[derive(Debug)]
 pub struct SamplingPortStatus {
+    /// Refresh period as defined via XCF
     pub refresh_period: Time,
 
     /// Timestamp of last message
     pub last_message_ts: Time,
 
+    /// Size in bytes of the last message which was received
     pub last_message_size: usize,
 
+    /// Whether the last message was valid
     pub last_message_valid: bool,
 }
 

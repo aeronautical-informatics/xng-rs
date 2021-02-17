@@ -1,16 +1,18 @@
-//! This module contains handles for the VCpu.
+//! This module contains functions for the virtual CPU
 
 use crate::raw_bindings;
 
+/// Type representing the id of a virtual CPU
 pub type VCpuId = raw_bindings::xVCpuId_t;
 
-/// Allows the current vCpu to yield its computation time to XNG
+/// Instruct the callers virtual CPU to yield its computation time in the current slot to XNG
 pub fn finish_slot() {
     unsafe { raw_bindings::XWaitUntilNextScheduleSlot() };
 }
 
-/* Symbols not provided?
-/// Get my CPU id
+/* These symbols are not yet provided in SKE
+
+/// Get the callers CPU id
 pub fn cpu_id()->VCpuId{
     unsafe {raw_bindings::XGetMyVCpuId()}
 }
