@@ -20,6 +20,8 @@ mod raw_bindings {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
+pub mod prelude;
+
 pub mod partition;
 pub mod port;
 pub mod types;
@@ -50,6 +52,13 @@ pub enum XngError {
         /// The maximum allowed size
         max_allowed: usize,
     },
+    /// The buffer is too small
+    BufTooSmall {
+        /// The size of the buffer
+        buf_size: usize,
+        /// The maximum allowed size
+        min_required: usize,
+    },
 }
 
 impl XngError {
@@ -71,3 +80,12 @@ impl From<raw_bindings::xReturnCode_t> for Result<(), XngError> {
     fn from(from: raw_bindings::xReturnCode_t) -> Result<(), XngError> {}
 }
 */
+
+/// Create a NULL terminated cstr
+#[macro_export]
+macro_rules! cstr {
+    ($s:expr) => {{
+        let a = concat!($s, "\0");
+        unsafe { $crate::prelude::CStr::from_bytes_with_nul_unchecked(a.as_bytes()) }
+    }};
+}

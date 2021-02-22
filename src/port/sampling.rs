@@ -1,4 +1,6 @@
-use core::{ffi::c_void, mem::MaybeUninit};
+use core::{ffi::c_void, mem::MaybeUninit, time::Duration};
+
+use cstr_core::CStr;
 
 use super::{validity_to_bool, PortDirection};
 use crate::{raw_bindings, types::Time, XngError};
@@ -16,9 +18,11 @@ impl<const N: usize> SamplingReceiver<N> {
     ///
     /// # Arguments
     ///
-    /// * `port_name` - The name of this port. Best be used with the byte string literal, e.g.
-    /// `b"my_port\0"`. DO NOT FORGET THE TRAILLING `\0`!
-    pub fn new(port_name: &[u8], time: i64) -> Result<Self, XngError> {
+    /// * `port_name` - The name of this port. Use the `csrt!("Hello world")` macro to create
+    /// values from literals.
+    /// * `ttl` - Time to live of the message. The message will be valid for `ttl` microseconds
+    /// after it was written
+    pub fn new(port_name: &CStr, ttl: Duration) -> Result<Self, XngError> {
         let mut port_id = MaybeUninit::uninit();
 
         let return_code = unsafe {
@@ -26,7 +30,7 @@ impl<const N: usize> SamplingReceiver<N> {
                 port_name.as_ptr() as *mut i8, // TODO fix to non mut pointer
                 N as u32,
                 PortDirection::Destination as u32,
-                time,
+                ttl.as_micros() as raw_bindings::xTime_t,
                 port_id.as_mut_ptr(),
             )
         };
@@ -41,7 +45,14 @@ impl<const N: usize> SamplingReceiver<N> {
     ///
     /// Returns `Ok(Some(read_bytes))` if a valid message was available, `Ok(None)` if no message
     /// was available and `Err(XngError)` if an error occure
-    pub fn recv(&self, buf: &mut [u8; N]) -> Result<Option<usize>, XngError> {
+    pub fn recv<'a>(&self, buf: &'a mut [u8]) -> Result<Option<&'a mut [u8]>, XngError> {
+        if buf.len() < N {
+            return Err(XngError::BufTooSmall {
+                buf_size: buf.len(),
+                min_required: N,
+            });
+        }
+
         let mut bytes_read = MaybeUninit::uninit();
         let mut validity = MaybeUninit::uninit();
 
@@ -57,7 +68,7 @@ impl<const N: usize> SamplingReceiver<N> {
         XngError::from(return_code)?;
         unsafe {
             Ok(match validity_to_bool(validity.assume_init()) {
-                true => Some(bytes_read.assume_init() as usize),
+                true => Some(&mut buf[..bytes_read.assume_init() as usize]),
                 false => None,
             })
         }
@@ -85,9 +96,11 @@ impl<const N: usize> SamplingSender<N> {
     ///
     /// # Arguments
     ///
-    /// * `port_name` - The name of this port. Best be used with the byte string literal, e.g.
-    /// `b"my_port\0"`. DO NOT FORGET THE TRAILLING `\0`!
-    pub fn new(port_name: &[u8], time: i64) -> Result<Self, XngError> {
+    /// * `port_name` - The name of this port. Use the `csrt!("Hello world")` macro to create
+    /// values from literals.
+    /// * `ttl` - Time to live of the message. The message will be invalid for duration of ttl,
+    /// starting from the send  
+    pub fn new(port_name: &CStr, ttl: Duration) -> Result<Self, XngError> {
         let mut port_id = MaybeUninit::uninit();
 
         let return_code = unsafe {
@@ -95,7 +108,7 @@ impl<const N: usize> SamplingSender<N> {
                 port_name.as_ptr() as *mut i8, // TODO fix to non mut pointer
                 N as u32,                      // fix to usize
                 PortDirection::Source as u32,  // TODO fix to usize
-                time,
+                ttl.as_micros() as raw_bindings::xTime_t,
                 port_id.as_mut_ptr(),
             )
         };

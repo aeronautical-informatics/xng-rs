@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 cty = "0.2.1"
-
+cstr_core = "0"
 
 [build-dependencies]
 bindgen = "0.53.1"

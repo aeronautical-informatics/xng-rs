@@ -3,6 +3,7 @@
 //!
 
 use core::mem::MaybeUninit;
+use cstr_core::CStr;
 
 use crate::{raw_bindings, XngError};
 
@@ -41,7 +42,16 @@ pub fn my_id() -> Result<PartitionId, XngError> {
 /// let my_id = partition::my_id()?;
 /// # Ok(())}
 /// ```
-pub fn id() {}
+pub fn id(port_name: &CStr) -> Result<PartitionId, XngError> {
+    let mut id = MaybeUninit::uninit();
+
+    unsafe {
+        let return_code =
+            raw_bindings::XGetPartitionId(port_name.as_ptr() as *mut i8, id.as_mut_ptr());
+        XngError::from(return_code)?;
+        Ok(id.assume_init())
+    }
+}
 
 /// Halt a partition
 ///
