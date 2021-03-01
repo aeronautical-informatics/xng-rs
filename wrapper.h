@@ -20,7 +20,7 @@
 #include <xQueuingPortIfc.h>
 #include <xSamplingPortIfc.h>
 #include <xScheduleIfc.h>
-#include <xTraceIfc.h>
+//#include <xTraceIfc.h>
 #include <xTypeIfc.h>
 #include <xVClockIfc.h>
 #include <xVCpuIfc.h>

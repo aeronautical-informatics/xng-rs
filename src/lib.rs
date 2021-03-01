@@ -22,8 +22,10 @@ mod raw_bindings {
 
 pub mod prelude;
 
+pub mod console;
 pub mod partition;
 pub mod port;
+pub mod time;
 pub mod types;
 pub mod vcpu;
 
@@ -75,17 +77,38 @@ impl XngError {
     }
 }
 
-/*
-impl From<raw_bindings::xReturnCode_t> for Result<(), XngError> {
-    fn from(from: raw_bindings::xReturnCode_t) -> Result<(), XngError> {}
+/// An Xng Error with trace information
+pub struct XngErrorTrace {
+    error: XngError,
+    line: u32,
 }
-*/
 
-/// Create a NULL terminated cstr
+impl From<XngErrorTrace> for XngError {
+    fn from(error_trace: XngErrorTrace) -> Self {
+        error_trace.error
+    }
+}
+
+/// Convert a `xReturnCode_t` to an `Result<(), XngError>`
+///
+// TODO make this work with no_std
+#[macro_export]
+macro_rules! to_traceable_error {
+    ($return_code:expr) => {{
+        println!("Error in file {}, line {}", file!(), line!());
+        XngError::from($return_code)
+    }};
+}
+
+/// Create a NULL terminated string in C representation
+///
+/// Use this where you would write `"Some string literal"` in C. Will panic if interior NULL bytes
+/// are in the string.
 #[macro_export]
 macro_rules! cstr {
     ($s:expr) => {{
         let a = concat!($s, "\0");
-        unsafe { $crate::prelude::CStr::from_bytes_with_nul_unchecked(a.as_bytes()) }
+        $crate::prelude::CStr::from_bytes_with_nul(a.as_bytes())
+            .expect("Interior NULL bytes are not allowed in cstr literals")
     }};
 }
