@@ -10,7 +10,7 @@
 #![deny(missing_docs)]
 
 /// This module contains the raw_bindings to the C ABI of XNG. It is advised to never expose this.
-mod raw_bindings {
+pub mod raw_bindings {
     #![allow(clippy::redundant_static_lifetimes)]
     #![allow(missing_docs)]
     #![allow(non_camel_case_types)]
@@ -107,7 +107,7 @@ macro_rules! to_traceable_error {
 #[macro_export]
 macro_rules! cstr {
     ($s:expr) => {{
-        let a = concat!($s, "\0");
+        let a = concat!($s, '\0');
         $crate::prelude::CStr::from_bytes_with_nul(a.as_bytes())
             .expect("Interior NULL bytes are not allowed in cstr literals")
     }};

@@ -46,6 +46,7 @@ impl<const N: usize> SamplingReceiver<N> {
     /// Returns `Ok(Some(read_bytes))` if a valid message was available, `Ok(None)` if no message
     /// was available and `Err(XngError)` if an error occure
     pub fn recv<'a>(&self, buf: &'a mut [u8]) -> Result<Option<(&'a mut [u8], bool)>, XngError> {
+        // if buf is smaller than N bytes, we can not fit a full message in it; abort
         if buf.len() < N {
             return Err(XngError::BufTooSmall {
                 buf_size: buf.len(),
@@ -130,6 +131,7 @@ impl<const N: usize> SamplingSender<N> {
     ///
     /// Returns `Ok(())` on success. `buf` must be smaller or equal in size to `N`.
     pub fn send(&self, buf: &[u8]) -> Result<(), XngError> {
+        // if buf is bigger than N bytes, we can not fit the send the whole buffer; abort
         if buf.len() > N {
             return Err(XngError::BufTooBig {
                 buf_size: buf.len(),
