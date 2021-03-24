@@ -9,6 +9,7 @@ in with pkgs; stdenv.mkDerivation {
   buildInputs = [
     latest.rustChannels.beta.rust
     ske-server
+    zsh
  ];
 
   shellHook = ''

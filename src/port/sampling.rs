@@ -18,11 +18,11 @@ impl<const N: usize> SamplingReceiver<N> {
     ///
     /// # Arguments
     ///
-    /// * `port_name` - The name of this port. Use the `csrt!("Hello world")` macro to create
+    /// * `port_name` - The name of this port. Use the `cstr!("Hello world")` macro to create
     /// values from literals.
     /// * `ttl` - Time to live of the message. The message will be valid for `ttl` microseconds
-    /// after it was written
-    pub fn new(port_name: &CStr, ttl: Duration) -> Result<Self, XngError> {
+    /// after it was written. Naturally, a duration below one microsecond is not supported.
+    pub fn new<T: Into<Duration>>(port_name: &CStr, ttl: T) -> Result<Self, XngError> {
         let mut port_id = MaybeUninit::uninit();
 
         let return_code = unsafe {
@@ -30,7 +30,7 @@ impl<const N: usize> SamplingReceiver<N> {
                 port_name.as_ptr() as *mut i8, // TODO fix to non mut pointer
                 N as u32,
                 PortDirection::Destination as u32,
-                ttl.as_micros() as raw_bindings::xTime_t,
+                ttl.into().as_micros() as raw_bindings::xTime_t,
                 port_id.as_mut_ptr(),
             )
         };
@@ -45,7 +45,8 @@ impl<const N: usize> SamplingReceiver<N> {
     ///
     /// Returns `Ok(Some(read_bytes))` if a valid message was available, `Ok(None)` if no message
     /// was available and `Err(XngError)` if an error occure
-    pub fn recv<'a>(&self, buf: &'a mut [u8]) -> Result<Option<&'a mut [u8]>, XngError> {
+    pub fn recv<'a>(&self, buf: &'a mut [u8]) -> Result<Option<(&'a mut [u8], bool)>, XngError> {
+        // if buf is smaller than N bytes, we can not fit a full message in it; abort
         if buf.len() < N {
             return Err(XngError::BufTooSmall {
                 buf_size: buf.len(),
@@ -60,18 +61,27 @@ impl<const N: usize> SamplingReceiver<N> {
             raw_bindings::XReadSamplingMessage(
                 self.port_id,
                 buf.as_mut_ptr() as *mut c_void,
-                bytes_read.as_mut_ptr(),
+                bytes_read.as_mut_ptr(), // TODO make this usize
                 validity.as_mut_ptr(),
             )
         };
 
-        XngError::from(return_code)?;
-        unsafe {
-            Ok(match validity_to_bool(validity.assume_init()) {
-                true => Some(&mut buf[..bytes_read.assume_init() as usize]),
-                false => None,
-            })
+        // retrieve possible error
+        let error = XngError::from(return_code);
+        // handle NotAvailable special, as export the semantics of it via Option
+        if let Err(XngError::NotAvailable) = error {
+            return Ok(None);
         }
+        // yield any other error
+        error?;
+
+        // No error, give back the result together with the validity
+        Ok(Some(unsafe {
+            (
+                &mut buf[..bytes_read.assume_init() as usize],
+                validity_to_bool(validity.assume_init()),
+            )
+        }))
     }
 
     /// Get the id of this sampling port
@@ -98,9 +108,7 @@ impl<const N: usize> SamplingSender<N> {
     ///
     /// * `port_name` - The name of this port. Use the `csrt!("Hello world")` macro to create
     /// values from literals.
-    /// * `ttl` - Time to live of the message. The message will be invalid for duration of ttl,
-    /// starting from the send  
-    pub fn new(port_name: &CStr, ttl: Duration) -> Result<Self, XngError> {
+    pub fn new(port_name: &CStr) -> Result<Self, XngError> {
         let mut port_id = MaybeUninit::uninit();
 
         let return_code = unsafe {
@@ -108,7 +116,7 @@ impl<const N: usize> SamplingSender<N> {
                 port_name.as_ptr() as *mut i8, // TODO fix to non mut pointer
                 N as u32,                      // fix to usize
                 PortDirection::Source as u32,  // TODO fix to usize
-                ttl.as_micros() as raw_bindings::xTime_t,
+                1 as raw_bindings::xTime_t,
                 port_id.as_mut_ptr(),
             )
         };
@@ -123,6 +131,7 @@ impl<const N: usize> SamplingSender<N> {
     ///
     /// Returns `Ok(())` on success. `buf` must be smaller or equal in size to `N`.
     pub fn send(&self, buf: &[u8]) -> Result<(), XngError> {
+        // if buf is bigger than N bytes, we can not fit the send the whole buffer; abort
         if buf.len() > N {
             return Err(XngError::BufTooBig {
                 buf_size: buf.len(),
