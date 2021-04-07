@@ -2,31 +2,33 @@
 //!
 //! This crate provides a thin wrapper for the C ABI of [FentISS'](https://fentiss.com/)
 //! [Xtratum](https://fentiss.com/products/hypervisor/) Next Generation (XNG) separation kernel. It
-//! allows the implementation of bare metal (`no_std`) partitions for the XNG.
+//! allows the implementation of bare metal (`no_std`) partitions for XNG.
 //!
-//! This is an early effort in an ongoing research effort, this is not validated, qualified or by
-//! any meaning _ready_.
+//!
+//! # About the Project
+//!
+//! This is by no means ready - it is an ongoing progress. While we've already used this together
+//! with FentISS' Separation Kernel Emulator (SKE), it was __not__ throughfully tested. While
+//! we are engaged with FentISS, there is no official support for this neither from FentISS nor
+//! from us. However, if you encounter any problems, please open up an issue. The chances are that
+//! we care and try to fix the issue.
 #![no_std]
 #![deny(missing_docs)]
 
 /// This module contains the raw_bindings to the C ABI of XNG. It is advised to never expose this.
-pub mod raw_bindings {
-    #![allow(clippy::redundant_static_lifetimes)]
-    #![allow(missing_docs)]
-    #![allow(non_camel_case_types)]
-    #![allow(non_snake_case)]
-    #![allow(non_upper_case_globals)]
-    #![allow(dead_code)]
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}
+#[allow(clippy::redundant_static_lifetimes)]
+#[allow(missing_docs)]
+#[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
+#[allow(non_upper_case_globals)]
+#[allow(dead_code)]
+mod raw_bindings;
 
 pub mod prelude;
 
-pub mod console;
 pub mod partition;
 pub mod port;
 pub mod time;
-pub mod types;
 pub mod vcpu;
 
 /// The XNG error type
@@ -61,6 +63,14 @@ pub enum XngError {
         /// The maximum allowed size
         min_required: usize,
     },
+    /// A time error occured
+    TimeError(time::TimeError),
+}
+
+impl From<time::TimeError> for XngError {
+    fn from(te: time::TimeError) -> Self {
+        XngError::TimeError(te)
+    }
 }
 
 impl XngError {
@@ -80,7 +90,7 @@ impl XngError {
 /// An Xng Error with trace information
 pub struct XngErrorTrace {
     error: XngError,
-    line: u32,
+    _line: u32,
 }
 
 impl From<XngErrorTrace> for XngError {

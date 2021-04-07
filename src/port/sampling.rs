@@ -1,9 +1,13 @@
-use core::{ffi::c_void, mem::MaybeUninit, time::Duration};
+use core::{ffi::c_void, mem::MaybeUninit};
 
 use cstr_core::CStr;
 
 use super::{validity_to_bool, PortDirection};
-use crate::{raw_bindings, types::Time, XngError};
+use crate::{
+    raw_bindings,
+    time::{duration_from_xtime_t, Duration},
+    XngError,
+};
 
 /// The type of a sampling ports id
 pub type SamplingPortId = raw_bindings::xSamplingPortId_t;
@@ -164,10 +168,10 @@ impl<const N: usize> SamplingSender<N> {
 #[derive(Debug)]
 pub struct SamplingPortStatus {
     /// Refresh period as defined via XCF
-    pub refresh_period: Time,
+    pub refresh_period: Duration,
 
-    /// Timestamp of last message
-    pub last_message_ts: Time,
+    /// Timestamp of last message - None if no message ever was received priorly
+    pub last_message_ts: Option<Duration>,
 
     /// Size in bytes of the last message which was received
     pub last_message_size: usize,
@@ -187,8 +191,8 @@ impl SamplingPortStatus {
         };
 
         Ok(Self {
-            refresh_period: status_struct.refreshPeriod,
-            last_message_ts: status_struct.lastMessageTimestamp,
+            refresh_period: duration_from_xtime_t(status_struct.refreshPeriod)?,
+            last_message_ts: duration_from_xtime_t(status_struct.lastMessageTimestamp).ok(),
             last_message_size: status_struct.lastMessageSize as usize,
             last_message_valid: validity_to_bool(status_struct.lastMessageValidity),
         })

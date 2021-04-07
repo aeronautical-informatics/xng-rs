@@ -3,7 +3,12 @@ name = "xng-rs"
 version = "0.1.0"
 authors = ["Wanja Zaeske <wanja.zaeske@dlr.de>"]
 edition = "2018"
-license-file = "LICENSE.txt"
+license-file = "LICENSE"
+
+[badges]
+github = { repository = "aeronautical-informatics/xng-rs" }
+is-it-maintained-open-issues = { repository = "aeronautical-informatics/xng-rs" }
+maintenance = { status = "actively-developed" }
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

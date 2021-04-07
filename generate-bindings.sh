@@ -3,5 +3,5 @@
 
 set -e
 cd "$(dirname "$0")"
-export CPATH=../include
+export CPATH=./include
 bindgen wrapper.h --ctypes-prefix cty --use-core --output src/raw_bindings.rs
