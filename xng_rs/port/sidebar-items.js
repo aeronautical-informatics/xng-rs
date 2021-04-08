@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["SamplingPortStatus","The current status of a Sampling Port"],["SamplingReceiver","Keeps the last (if any) sent value"],["SamplingSender","Allows to store one message in the port"]],"type":[["SamplingPortId","The type of a sampling ports id"]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["TimeError","Error during operations with time"]],"fn":[["since_boot","Get the duration of time since the boot of the system/"]],"struct":[["Duration","A `Duration` type to represent a span of time, typically used for system timeouts."]],"trait":[["DurationFromInt","Extension trait that adds convenience methods to the `i64` type"]]});

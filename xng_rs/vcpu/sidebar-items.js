@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["finish_slot","Instruct the callers virtual CPU to yield its computation time in the current slot to XNG"]],"type":[["VCpuId","Type representing the id of a virtual CPU"]]});
