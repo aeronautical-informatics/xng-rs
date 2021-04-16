@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Wanja Zaeske <wanja.zaeske@dlr.de>"]
 edition = "2018"
 license-file = "LICENSE"
+documentation = "https://aeronautical-informatics.github.io/xng-rs"
 
 [badges]
 github = { repository = "aeronautical-informatics/xng-rs" }
