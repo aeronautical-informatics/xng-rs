@@ -9,8 +9,7 @@
       pkgs = nixpkgs.legacyPackages."${system}";
       naersk-lib = naersk.lib."${system}";
     in rec {
-      # `nix build`
-      packages.my-project = naersk-lib.buildPackage {
+      packages.xng-rs = with pkgs; naersk-lib.buildPackage {
         pname = "xng-rs";
         root = ./.;
         doCheck = true;
@@ -19,20 +18,12 @@
         doDocFail = true;
         copyTarget = true;
       };
-      defaultPackage = packages.my-project;
+      defaultPackage = packages.xng-rs;
 
-      # `nix run`
-      apps.my-project = utils.lib.mkApp {
-        drv = packages.my-project;
-      };
-      defaultApp = apps.my-project;
-
-      # `nix develop`
       devShell = pkgs.mkShell {
         nativeBuildInputs = with pkgs; [ rustc cargo ];
       };
 
-      # Hail to the Hydra
       hydraJobs = packages.my-project;
     });
 }

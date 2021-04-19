@@ -15,14 +15,9 @@
 #![no_std]
 #![deny(missing_docs)]
 
-/// This module contains the raw_bindings to the C ABI of XNG. It is advised to never expose this.
-#[allow(clippy::redundant_static_lifetimes)]
-#[allow(missing_docs)]
-#[allow(non_camel_case_types)]
-#[allow(non_snake_case)]
-#[allow(non_upper_case_globals)]
-#[allow(dead_code)]
-mod raw_bindings;
+/// This module contains the bindings to the C ABI of XNG. It is advised to never use this directly
+/// from outside of `xng-rs`.
+pub mod bindings;
 
 pub mod prelude;
 
@@ -48,7 +43,7 @@ pub enum XngError {
     /// Request incompatible with mode of operation.
     InvalidMode,
     /// A function returned a return code which we do not know
-    UnknownReturnCode(raw_bindings::xReturnCode_t),
+    UnknownReturnCode(bindings::xReturnCode_t),
     /// The buffer is too big
     BufTooBig {
         /// The size of the buffer
@@ -74,14 +69,14 @@ impl From<time::TimeError> for XngError {
 }
 
 impl XngError {
-    fn from(from: raw_bindings::xReturnCode_t) -> Result<(), Self> {
+    fn from(from: bindings::xReturnCode_t) -> Result<(), Self> {
         match from {
-            raw_bindings::xNoError => Ok(()),
-            raw_bindings::xNoAction => Err(XngError::NoAction),
-            raw_bindings::xNotAvailable => Err(XngError::NotAvailable),
-            raw_bindings::xInvalidParam => Err(XngError::InvalidParam),
-            raw_bindings::xInvalidConfig => Err(XngError::InvalidConfig),
-            raw_bindings::xInvalidMode => Err(XngError::InvalidMode),
+            bindings::xNoError => Ok(()),
+            bindings::xNoAction => Err(XngError::NoAction),
+            bindings::xNotAvailable => Err(XngError::NotAvailable),
+            bindings::xInvalidParam => Err(XngError::InvalidParam),
+            bindings::xInvalidConfig => Err(XngError::InvalidConfig),
+            bindings::xInvalidMode => Err(XngError::InvalidMode),
             code => Err(XngError::UnknownReturnCode(code)),
         }
     }

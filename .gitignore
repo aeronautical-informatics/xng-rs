@@ -1,3 +1,4 @@
 /target
 **/result
-include/
+**/result-doc
+/util/include
