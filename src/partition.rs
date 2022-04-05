@@ -46,7 +46,8 @@ pub fn id(port_name: &CStr) -> Result<PartitionId, XngError> {
     let mut id = MaybeUninit::uninit();
 
     unsafe {
-        let return_code = bindings::XGetPartitionId(port_name.as_ptr() as *mut i8, id.as_mut_ptr());
+        let return_code =
+            bindings::XGetPartitionId(port_name.as_ptr() as *mut cty::c_char, id.as_mut_ptr());
         XngError::from(return_code)?;
         Ok(id.assume_init())
     }

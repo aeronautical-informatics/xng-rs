@@ -31,7 +31,7 @@ impl<const N: usize> SamplingReceiver<N> {
 
         let return_code = unsafe {
             bindings::XCreateSamplingPort(
-                port_name.as_ptr() as *mut i8, // TODO fix to non mut pointer
+                port_name.as_ptr() as *mut cty::c_char, // TODO fix to non mut pointer
                 N as u32,
                 PortDirection::Destination as u32,
                 ttl.into().as_micros() as bindings::xTime_t,
@@ -117,9 +117,9 @@ impl<const N: usize> SamplingSender<N> {
 
         let return_code = unsafe {
             bindings::XCreateSamplingPort(
-                port_name.as_ptr() as *mut i8, // TODO fix to non mut pointer
-                N as u32,                      // fix to usize
-                PortDirection::Source as u32,  // TODO fix to usize
+                port_name.as_ptr() as *mut cty::c_char, // TODO fix to non mut pointer
+                N as u32,                               // fix to usize
+                PortDirection::Source as u32,           // TODO fix to usize
                 1 as bindings::xTime_t,
                 port_id.as_mut_ptr(),
             )

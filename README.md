@@ -2,13 +2,27 @@
 [![Percentage of issues still open](https://isitmaintained.com/badge/open/aeronautical-informatics/xng-rs.svg)](https://isitmaintained.com/project/aeronautical-informatics/xng-rs "Percentage of issues still open")
 ![Maintenance](https://img.shields.io/badge/maintenance-activly--developed-brightgreen.svg)
 
+
 # xng-rs
 
 A Rust wrapper for the XNG API
 
-This crate provides a thin wrapper for the C ABI of [FentISS'](https://fentiss.com/)
-[Xtratum](https://fentiss.com/products/hypervisor/) Next Generation (XNG) separation kernel. It
-allows the implementation of bare metal (`no_std`) partitions for XNG.
+This crate provides a thin wrapper for the C ABI of [fentISS'](https://fentiss.com/)
+[Xtratum Next Generation (XNG)](https://fentiss.com/products/hypervisor/)
+separation kernel/type 1 hypervisor. It allows the implementation of bare metal
+(`no_std`) partitions for XNG, using the XNG Runtime Environment (XRE).
+
+
+# Usage
+
+In order to compile this crate, a compiler must be able to pick up your XNG
+header files. An easy way to achieve this is to set the `C_INCLUDE_PATH` env
+var to the folder containing the fentiss header files when running `cargo`.
+Example:
+
+```console
+$ C_INCLUDE_PATH=/my/xng/installation/include cargo build
+```
 
 
 ## About the Project

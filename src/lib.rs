@@ -17,7 +17,15 @@
 
 /// This module contains the bindings to the C ABI of XNG. It is advised to never use this directly
 /// from outside of `xng-rs`.
-pub mod bindings;
+pub mod bindings {
+    #![allow(clippy::redundant_static_lifetimes)]
+    #![allow(dead_code)]
+    #![allow(missing_docs)]
+    #![allow(non_camel_case_types)]
+    #![allow(non_snake_case)]
+    #![allow(non_upper_case_globals)]
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
 
 pub mod prelude;
 
@@ -114,6 +122,32 @@ macro_rules! cstr {
     ($s:expr) => {{
         let a = concat!($s, '\0');
         $crate::prelude::CStr::from_bytes_with_nul(a.as_bytes())
-            .expect("Interior NULL bytes are not allowed in cstr literals")
+            .expect("InteriorG NULL bytes are not allowed in cstr literals")
     }};
+}
+
+#[cfg(not(test))]
+#[panic_handler]
+fn panic(info: &core::panic::PanicInfo) -> ! {
+    use core2::io::{Cursor, Write};
+
+    let mut buf = [0; bindings::xMaxHmMessageLength as usize]; // TODO fix to usize
+    let mut len = 0;
+
+    let mut cur = Cursor::new(&mut buf[..]);
+
+    if let Some(s) = info.payload().downcast_ref::<&str>() {
+        write!(&mut cur, "{}", s).expect("!write");
+        len = s.len().min(buf.len());
+    }
+
+    unsafe {
+        bindings::XReportHmEvent(
+            bindings::xHmApplicationError,
+            0,
+            buf.as_mut_ptr() as _,
+            len as u32, // TODO fix to usize
+        );
+    }
+    loop {}
 }
