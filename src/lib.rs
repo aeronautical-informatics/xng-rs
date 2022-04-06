@@ -126,7 +126,12 @@ macro_rules! cstr {
     }};
 }
 
-#[cfg(not(test))]
+// TODO is this a safe abstraction?
+#[cfg(not(any(
+    target_family = "unix",
+    target_family = "windows",
+    target_family = "wasm"
+)))]
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
     use core2::io::{Cursor, Write};
