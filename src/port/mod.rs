@@ -12,7 +12,7 @@
 //! bytes big. The messages are guaranteed to to be served in FIFO order. This type of port is
 //! single producer single consumer (SPSC), so only two partitions can use one Queueing Port.
 
-use crate::raw_bindings;
+use crate::bindings;
 
 mod sampling;
 
@@ -22,21 +22,21 @@ pub use sampling::*;
 #[derive(PartialEq, Eq)]
 enum PortDirection {
     /// This port is a source
-    Source = raw_bindings::xSourcePort as isize,
+    Source = bindings::xSourcePort as isize,
     /// This port is a destination
-    Destination = raw_bindings::xDestinationPort as isize,
+    Destination = bindings::xDestinationPort as isize,
 }
 
 /// Check if a message is valid
 ///
 /// Returns true if the message was valid
-fn validity_to_bool(validity: raw_bindings::xValidity_t) -> bool {
+fn validity_to_bool(validity: bindings::xValidity_t) -> bool {
     match validity {
-            raw_bindings::xInvalidMessage => false,
-            raw_bindings::xValidMessage => true,
+            bindings::xInvalidMessage => false,
+            bindings::xValidMessage => true,
             _=> panic!("The function `XReadSamplingMessage` broke it's contract, the value of `xValidity_t` is neither {} nor {}, but {}",
-             raw_bindings::xInvalidMessage       ,
-              raw_bindings::xValidMessage,
+             bindings::xInvalidMessage       ,
+              bindings::xValidMessage,
               validity),
         }
 }

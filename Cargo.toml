@@ -2,8 +2,9 @@
 name = "xng-rs"
 version = "0.1.0"
 authors = ["Wanja Zaeske <wanja.zaeske@dlr.de>"]
-edition = "2018"
+edition = "2021"
 license-file = "LICENSE"
+documentation = "https://aeronautical-informatics.github.io/xng-rs"
 
 [badges]
 github = { repository = "aeronautical-informatics/xng-rs" }
@@ -13,8 +14,9 @@ maintenance = { status = "actively-developed" }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cty = "0.2.1"
-cstr_core = "0"
+core2 = { version = "0.4", default-features = false }
+cty = "0.2"
+cstr_core = { version = "0", default-features = false }
 
 [build-dependencies]
-bindgen = "0.53.1"
+bindgen = "0.53"

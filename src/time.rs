@@ -10,7 +10,7 @@ pub use core::time::Duration;
 use core::{convert::TryInto, mem::MaybeUninit};
 
 use crate::{
-    raw_bindings::{xTime_t, XGetSystemTime},
+    bindings::{xTime_t, XGetSystemTime},
     XngError,
 };
 

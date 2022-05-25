@@ -1,4 +1,4 @@
 /target
-Cargo.lock
 **/result
-include/
+**/result-doc
+/include

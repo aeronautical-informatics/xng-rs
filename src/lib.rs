@@ -15,14 +15,17 @@
 #![no_std]
 #![deny(missing_docs)]
 
-/// This module contains the raw_bindings to the C ABI of XNG. It is advised to never expose this.
-#[allow(clippy::redundant_static_lifetimes)]
-#[allow(missing_docs)]
-#[allow(non_camel_case_types)]
-#[allow(non_snake_case)]
-#[allow(non_upper_case_globals)]
-#[allow(dead_code)]
-mod raw_bindings;
+/// This module contains the bindings to the C ABI of XNG. It is advised to never use this directly
+/// from outside of `xng-rs`.
+pub mod bindings {
+    #![allow(clippy::redundant_static_lifetimes)]
+    #![allow(dead_code)]
+    #![allow(missing_docs)]
+    #![allow(non_camel_case_types)]
+    #![allow(non_snake_case)]
+    #![allow(non_upper_case_globals)]
+    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+}
 
 pub mod prelude;
 
@@ -48,7 +51,7 @@ pub enum XngError {
     /// Request incompatible with mode of operation.
     InvalidMode,
     /// A function returned a return code which we do not know
-    UnknownReturnCode(raw_bindings::xReturnCode_t),
+    UnknownReturnCode(bindings::xReturnCode_t),
     /// The buffer is too big
     BufTooBig {
         /// The size of the buffer
@@ -74,14 +77,14 @@ impl From<time::TimeError> for XngError {
 }
 
 impl XngError {
-    fn from(from: raw_bindings::xReturnCode_t) -> Result<(), Self> {
+    fn from(from: bindings::xReturnCode_t) -> Result<(), Self> {
         match from {
-            raw_bindings::xNoError => Ok(()),
-            raw_bindings::xNoAction => Err(XngError::NoAction),
-            raw_bindings::xNotAvailable => Err(XngError::NotAvailable),
-            raw_bindings::xInvalidParam => Err(XngError::InvalidParam),
-            raw_bindings::xInvalidConfig => Err(XngError::InvalidConfig),
-            raw_bindings::xInvalidMode => Err(XngError::InvalidMode),
+            bindings::xNoError => Ok(()),
+            bindings::xNoAction => Err(XngError::NoAction),
+            bindings::xNotAvailable => Err(XngError::NotAvailable),
+            bindings::xInvalidParam => Err(XngError::InvalidParam),
+            bindings::xInvalidConfig => Err(XngError::InvalidConfig),
+            bindings::xInvalidMode => Err(XngError::InvalidMode),
             code => Err(XngError::UnknownReturnCode(code)),
         }
     }
@@ -119,6 +122,37 @@ macro_rules! cstr {
     ($s:expr) => {{
         let a = concat!($s, '\0');
         $crate::prelude::CStr::from_bytes_with_nul(a.as_bytes())
-            .expect("Interior NULL bytes are not allowed in cstr literals")
+            .expect("InteriorG NULL bytes are not allowed in cstr literals")
     }};
+}
+
+// TODO is this a safe abstraction?
+#[cfg(not(any(
+    target_family = "unix",
+    target_family = "windows",
+    target_family = "wasm"
+)))]
+#[panic_handler]
+fn panic(info: &core::panic::PanicInfo) -> ! {
+    use core2::io::{Cursor, Write};
+
+    let mut buf = [0; bindings::xMaxHmMessageLength as usize]; // TODO fix to usize
+    let mut len = 0;
+
+    let mut cur = Cursor::new(&mut buf[..]);
+
+    if let Some(s) = info.payload().downcast_ref::<&str>() {
+        write!(&mut cur, "{}", s).expect("!write");
+        len = s.len().min(buf.len());
+    }
+
+    unsafe {
+        bindings::XReportHmEvent(
+            bindings::xHmApplicationError,
+            0,
+            buf.as_mut_ptr() as _,
+            len as u32, // TODO fix to usize
+        );
+    }
+    loop {}
 }

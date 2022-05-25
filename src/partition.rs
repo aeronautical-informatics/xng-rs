@@ -5,10 +5,10 @@
 use core::mem::MaybeUninit;
 use cstr_core::CStr;
 
-use crate::{raw_bindings, XngError};
+use crate::{bindings, XngError};
 
 /// One partitions id type
-pub type PartitionId = raw_bindings::xPartitionId_t;
+pub type PartitionId = bindings::xPartitionId_t;
 
 /// Get the current partitions ID
 ///
@@ -25,7 +25,7 @@ pub fn my_id() -> Result<PartitionId, XngError> {
     let mut id = MaybeUninit::uninit();
 
     unsafe {
-        let return_code = raw_bindings::XGetMyPartitionId(id.as_mut_ptr());
+        let return_code = bindings::XGetMyPartitionId(id.as_mut_ptr());
         XngError::from(return_code)?;
         Ok(id.assume_init())
     }
@@ -47,7 +47,7 @@ pub fn id(port_name: &CStr) -> Result<PartitionId, XngError> {
 
     unsafe {
         let return_code =
-            raw_bindings::XGetPartitionId(port_name.as_ptr() as *mut i8, id.as_mut_ptr());
+            bindings::XGetPartitionId(port_name.as_ptr() as *mut cty::c_char, id.as_mut_ptr());
         XngError::from(return_code)?;
         Ok(id.assume_init())
     }
@@ -71,6 +71,6 @@ pub fn id(port_name: &CStr) -> Result<PartitionId, XngError> {
 /// # Ok(())}
 /// ```
 pub fn halt(partition: PartitionId) -> Result<(), XngError> {
-    let return_code = unsafe { raw_bindings::XHaltPartition(partition) };
+    let return_code = unsafe { bindings::XHaltPartition(partition) };
     XngError::from(return_code)
 }

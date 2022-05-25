@@ -4,13 +4,13 @@ use cstr_core::CStr;
 
 use super::{validity_to_bool, PortDirection};
 use crate::{
-    raw_bindings,
+    bindings,
     time::{duration_from_xtime_t, Duration},
     XngError,
 };
 
 /// The type of a sampling ports id
-pub type SamplingPortId = raw_bindings::xSamplingPortId_t;
+pub type SamplingPortId = bindings::xSamplingPortId_t;
 
 /// Keeps the last (if any) sent value
 pub struct SamplingReceiver<const N: usize> {
@@ -30,11 +30,11 @@ impl<const N: usize> SamplingReceiver<N> {
         let mut port_id = MaybeUninit::uninit();
 
         let return_code = unsafe {
-            raw_bindings::XCreateSamplingPort(
-                port_name.as_ptr() as *mut i8, // TODO fix to non mut pointer
+            bindings::XCreateSamplingPort(
+                port_name.as_ptr() as *mut cty::c_char, // TODO fix to non mut pointer
                 N as u32,
                 PortDirection::Destination as u32,
-                ttl.into().as_micros() as raw_bindings::xTime_t,
+                ttl.into().as_micros() as bindings::xTime_t,
                 port_id.as_mut_ptr(),
             )
         };
@@ -62,7 +62,7 @@ impl<const N: usize> SamplingReceiver<N> {
         let mut validity = MaybeUninit::uninit();
 
         let return_code = unsafe {
-            raw_bindings::XReadSamplingMessage(
+            bindings::XReadSamplingMessage(
                 self.port_id,
                 buf.as_mut_ptr() as *mut c_void,
                 bytes_read.as_mut_ptr(), // TODO make this usize
@@ -102,7 +102,7 @@ impl<const N: usize> SamplingReceiver<N> {
 
 /// Allows to store one message in the port
 pub struct SamplingSender<const N: usize> {
-    port_id: raw_bindings::xSamplingPortId_t,
+    port_id: bindings::xSamplingPortId_t,
 }
 
 impl<const N: usize> SamplingSender<N> {
@@ -116,11 +116,11 @@ impl<const N: usize> SamplingSender<N> {
         let mut port_id = MaybeUninit::uninit();
 
         let return_code = unsafe {
-            raw_bindings::XCreateSamplingPort(
-                port_name.as_ptr() as *mut i8, // TODO fix to non mut pointer
-                N as u32,                      // fix to usize
-                PortDirection::Source as u32,  // TODO fix to usize
-                1 as raw_bindings::xTime_t,
+            bindings::XCreateSamplingPort(
+                port_name.as_ptr() as *mut cty::c_char, // TODO fix to non mut pointer
+                N as u32,                               // fix to usize
+                PortDirection::Source as u32,           // TODO fix to usize
+                1 as bindings::xTime_t,
                 port_id.as_mut_ptr(),
             )
         };
@@ -144,7 +144,7 @@ impl<const N: usize> SamplingSender<N> {
         }
 
         let return_code = unsafe {
-            raw_bindings::XWriteSamplingMessage(
+            bindings::XWriteSamplingMessage(
                 self.port_id,
                 buf.as_ptr() as *mut c_void, // TODO fix to non mut pointer
                 buf.len() as u32,            // TODO fix to usize
@@ -185,7 +185,7 @@ impl SamplingPortStatus {
         let mut status_struct = MaybeUninit::uninit();
 
         let status_struct = unsafe {
-            let return_code = raw_bindings::XGetSamplingPortStatus(id, status_struct.as_mut_ptr());
+            let return_code = bindings::XGetSamplingPortStatus(id, status_struct.as_mut_ptr());
             XngError::from(return_code)?;
             status_struct.assume_init()
         };
