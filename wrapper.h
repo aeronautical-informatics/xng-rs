@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <xArchTypeIfc.h>
 #include <xAsmIfc.h>
 #include <xBoardTypeIfc.h>

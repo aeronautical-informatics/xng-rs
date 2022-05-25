@@ -12,7 +12,7 @@
 //! we are engaged with FentISS, there is no official support for this neither from FentISS nor
 //! from us. However, if you encounter any problems, please open up an issue. The chances are that
 //! we care and try to fix the issue.
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 #![deny(missing_docs)]
 
 /// This module contains the bindings to the C ABI of XNG. It is advised to never use this directly
@@ -126,12 +126,7 @@ macro_rules! cstr {
     }};
 }
 
-// TODO is this a safe abstraction?
-#[cfg(not(any(
-    target_family = "unix",
-    target_family = "windows",
-    target_family = "wasm"
-)))]
+#[cfg(not(feature = "std"))]
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
     use core2::io::{Cursor, Write};
