@@ -34,16 +34,6 @@
       LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
     in
     rec {
-      packages."${system}".xng-rs = naersk-lib.buildPackage {
-        pname = "xng-rs";
-        root = ./.;
-        doCheck = true;
-        doDoc = true;
-        doDocFail = true;
-        copyTarget = true;
-      };
-      defaultPackage."${system}" = packages.${system}.xng-rs;
-
       devShell."${system}" = mkShell {
         inherit LIBCLANG_PATH;
         inputsFrom = [ packages."${system}".xng-rs ];
