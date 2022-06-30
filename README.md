@@ -1,6 +1,5 @@
 [![Workflow Status](https://github.com/aeronautical-informatics/xng-rs/workflows/main/badge.svg)](https://github.com/aeronautical-informatics/xng-rs/actions?query=workflow%3A%22main%22)
 [![Percentage of issues still open](https://isitmaintained.com/badge/open/aeronautical-informatics/xng-rs.svg)](https://isitmaintained.com/project/aeronautical-informatics/xng-rs "Percentage of issues still open")
-![Maintenance](https://img.shields.io/badge/maintenance-activly--developed-brightgreen.svg)
 
 
 # xng-rs
@@ -18,10 +17,16 @@ separation kernel/type 1 hypervisor. It allows the implementation of bare metal
 In order to compile this crate, a compiler must be able to pick up your XNG
 header files. An easy way to achieve this is to set the `C_INCLUDE_PATH` env
 var to the folder containing the fentiss header files when running `cargo`.
+Furthermore, `rust-bindgen` requires `libclang` to parse the C header files.
+The `LIBCLANG_PATH` env var is used to find a suitable `libclang`. The
+following example shows how to set the env vars accordingly.
+
 Example:
 
 ```console
-$ C_INCLUDE_PATH=/my/xng/installation/include cargo build
+export C_INCLUDE_PATH=/my/xng/installation/include
+export LIBCLANG_PATH=/my/clang/installation/lib
+cargo build
 ```
 
 

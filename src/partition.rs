@@ -74,3 +74,18 @@ pub fn halt(partition: PartitionId) -> Result<(), XngError> {
     let return_code = unsafe { bindings::XHaltPartition(partition) };
     XngError::from(return_code)
 }
+
+struct PartitionStatus {
+    /// The start condition field indicates the way the partition was started
+    start_condition: u8,
+
+    /// Times the partition has been re-started. This counter is zeroed when the hypervisor is
+    /// reset
+    restarts: bindings::xPartitionRestartRange_t,
+
+    /// When vCpuState is xVCpuRunning, vCpuSchedStatus contains the status of the current slot
+    vcpu_state: crate::vcpu::VCpuState,
+
+    ///
+    vcpu_sched_state: bindings::xVCpuSchedStatus_t,
+}

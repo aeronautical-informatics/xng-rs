@@ -14,9 +14,14 @@ maintenance = { status = "actively-developed" }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-core2 = { version = "0.4", default-features = false }
-cty = "0.2"
-cstr_core = { version = "0", default-features = false }
+core2 = { version = "*", default-features = false }
+cty = "*"
+cstr_core = { version = "*", default-features = false }
 
 [build-dependencies]
-bindgen = "0.53"
+bindgen = "*"
+
+[features]
+default = [ "std" ]
+# enabling this feature disables the panic_handler adapter to XNG's health monitoring
+std = []
